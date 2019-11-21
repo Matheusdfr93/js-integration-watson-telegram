@@ -20,6 +20,7 @@
     "cfenv": "^1.0.x",
     "dotenv": "^4.0.0",
     "express": "^4.15.x",
+    "ibm-watson": "^5.1.0",
     "mongodb": "^3.0.10",
     "node-telegram-bot-api": "0.24.0",
     "watson-developer-cloud": "^2.8.1"
