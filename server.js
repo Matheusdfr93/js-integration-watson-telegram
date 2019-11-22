@@ -20,16 +20,18 @@ const conversation = new AssistantV2({
   url: 'https://gateway.watsonplatform.net/assistant/api',
 });
 
+const ses = conversation.createSession({
+	assistantId: '422166ea-c502-4b2a-bbc9-4c5c081b1146'
+})
+
 var context = {};
 var telegramBot = new tbot('970020294:AAFTqOQAlL3qAE41XtzGrpdmVtnyfSnLKrw', 
 { polling: true });
 
 telegramBot.on('message', function (msg) {
 	var chatId = msg.chat.id;	
-	conversation.createSession({
-		assistantId: '422166ea-c502-4b2a-bbc9-4c5c081b1146'
-	  })
-		.then(res => {
+	
+	ses.then(res => {
 			console.log(res.result.session_id)
 			conversation.message({
 				assistantId: '422166ea-c502-4b2a-bbc9-4c5c081b1146',

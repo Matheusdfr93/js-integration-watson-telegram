@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Matheusdfr93/js-integration-watson-telegram"
+    "url": "js-integration-watson-telegram"
   },
   "dependencies": {
     "@cloudant/cloudant": "^3.0.2",
