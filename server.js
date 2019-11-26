@@ -1,8 +1,6 @@
 const express = require('express');
 const cfenv = require('cfenv');
-
-//const userskeys = require('./app.json');
-
+const apiKeys = require('./app.json');
 var watson = require('watson-developer-cloud');
 var tbot = require('node-telegram-bot-api');
 
@@ -14,10 +12,14 @@ var appEnv = cfenv.getAppEnv();
 const AssistantV2 = require('ibm-watson/assistant/v2');
 const { IamAuthenticator } = require('ibm-watson/auth');
 
+
+let acessPermission = [804932589];
+
+
 const conversation = new AssistantV2({
   version: '2019-10-09',
   authenticator: new IamAuthenticator({
-    apikey: 'o-rhJdaYokZh0rmC-EA3uCKb-ve46tcYhbmnmFjNCJYV',
+    apikey: apiKeys.apikey,
   }),
   url: 'https://gateway.watsonplatform.net/assistant/api',
 });
@@ -25,11 +27,11 @@ const conversation = new AssistantV2({
 
 async function newWatsonSes() {
 	return await conversation.createSession({
-		assistantId: '422166ea-c502-4b2a-bbc9-4c5c081b1146'
+		assistantId: apiKeys.assistantId
 	})
 }
 
-const userSession = [];
+let userSession = [];
 async function createSession (user){
 	console.log(user)
 	const findUser = userSession.filter(item => item.id === user )
@@ -52,15 +54,13 @@ async function createSession (user){
 
 
 var context = {};
-var telegramBot = new tbot('970020294:AAFTqOQAlL3qAE41XtzGrpdmVtnyfSnLKrw', 
+var telegramBot = new tbot(apiKeys.apiTelegram, 
  { polling: true });
 
-
-
-
+ 
 function sendMessage(context, msg, ses) {
 	return conversation.message({
-		assistantId: '422166ea-c502-4b2a-bbc9-4c5c081b1146',
+		assistantId: apiKeys.assistantId,
 		sessionId: ses,
 		context: context,
 		input: {
@@ -84,6 +84,7 @@ telegramBot.on('callback_query', (callbackQuery) => {
 
 telegramBot.on('message', function (msg) {
 	var chatId = msg.chat.id;	
+	console.log("user: ", );
 	const session = createSession(msg.from.id);
 	session.then(ses => {
 		console.log('retorno: ',ses)
@@ -91,6 +92,7 @@ telegramBot.on('message', function (msg) {
 			.then(res => {
 				const type = res.result.output.generic[0].response_type;
 				context = res.result.context;
+				if (acessPermission.includes(msg.from.id)){
 				switch (type) {
 					case 'text':
 						console.log(JSON.stringify(res.result.output.generic[0].response_type));
@@ -119,7 +121,11 @@ telegramBot.on('message', function (msg) {
 					default:
 						break;
 				}
+			}else{
+				telegramBot.sendMessage(chatId, 'Não Autorizado');
+			} 
 			})
+		
 			.catch(err => {
 				console.log(err);
 			})

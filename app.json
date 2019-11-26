@@ -1,7 +1,6 @@
 {
+    "apikey":"o-rhJdaYokZh0rmC-EA3uCKb-ve46tcYhbmnmFjNCJYV",
     "watsonUsername":"matheusdfr93@gmail.com",
     "apiTelegram":"970020294:AAFTqOQAlL3qAE41XtzGrpdmVtnyfSnLKrw",
-    "ASSISTANT_IAM_APIKEY":"o-rhJdaYokZh0rmC-EA3uCKb-ve46tcYhbmnmFjNCJYV",
-    "senhaWatson":"o-rhJdaYokZh0rmC-EA3uCKb-ve46tcYhbmnmFjNCJYV",
-    "workspaceId":"422166ea-c502-4b2a-bbc9-4c5c081b1146"
+    "assistantId":"422166ea-c502-4b2a-bbc9-4c5c081b1146"
 }
