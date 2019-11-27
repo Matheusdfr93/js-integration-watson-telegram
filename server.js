@@ -1,6 +1,7 @@
 const express = require('express');
 const cfenv = require('cfenv');
 const apiKeys = require('./app.json');
+
 var watson = require('watson-developer-cloud');
 var tbot = require('node-telegram-bot-api');
 
@@ -17,7 +18,7 @@ let acessPermission = [804932589];
 
 
 const conversation = new AssistantV2({
-  version: '2019-10-09',
+  version: apiKeys.watsonVersion,
   authenticator: new IamAuthenticator({
     apikey: apiKeys.apikey,
   }),
@@ -101,17 +102,18 @@ telegramBot.on('message', function (msg) {
 	
 					case 'option':
 						const options = res.result.output.generic[0].options;
+						const optionLabel = options.map(function(elem) {
+							return 	[{
+								text: elem.label,
+								callback_data: elem.label
+							}]
+						})
+						console.log(optionLabel)
 						const jOptions =   {
 							reply_markup: {
-								keyboard: [[
-									{
-										text: options[0].label,
-										callback_data: options[0].label
-									}],[ {
-										text: options[1].label,
-										callback_data: options[1].label
-									},
-								]]
+								keyboard: 
+									optionLabel
+								
 							}
 						}
 							console.log(JSON.stringify(res.result.output.generic[0].response_type));
@@ -121,9 +123,9 @@ telegramBot.on('message', function (msg) {
 					default:
 						break;
 				}
-			}else{
+				}else{
 				telegramBot.sendMessage(chatId, 'Não Autorizado');
-			} 
+				} 
 			})
 		
 			.catch(err => {
