@@ -119,6 +119,11 @@ telegramBot.on('message', function (msg) {
 							console.log(JSON.stringify(res.result.output.generic[0].response_type));
 							telegramBot.sendMessage(chatId, res.result.output.generic[0].title, jOptions);
 							break;
+					case 'image':
+
+					telegramBot.sendMessage(chatId, res.result.output.generic[0].title);
+					telegramBot.sendPhoto(chatId, res.result.output.generic[0].source)
+					break;
 	
 					default:
 						break;
