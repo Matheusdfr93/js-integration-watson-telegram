@@ -1,6 +1,7 @@
 const express = require('express');
 const cfenv = require('cfenv');
 const apiKeys = require('./app.json');
+const Client = require('pg');
 
 var watson = require('watson-developer-cloud');
 var tbot = require('node-telegram-bot-api');
@@ -14,7 +15,7 @@ const AssistantV2 = require('ibm-watson/assistant/v2');
 const { IamAuthenticator } = require('ibm-watson/auth');
 
 
-let acessPermission = [804932589];
+let acessPermission = [804932589, 740600431, 710342198];
 
 
 const conversation = new AssistantV2({
@@ -60,6 +61,7 @@ var telegramBot = new tbot(apiKeys.apiTelegram,
 
  
 function sendMessage(context, msg, ses) {
+	console.log(msg)
 	return conversation.message({
 		assistantId: apiKeys.assistantId,
 		sessionId: ses,
@@ -73,6 +75,7 @@ function sendMessage(context, msg, ses) {
 
 telegramBot.on('callback_query', (callbackQuery) => {
 	const message = callbackQuery.message;
+	let armazena;
 	const category = callbackQuery.data;
 	const session = createSession(message.from.id)
 
@@ -96,7 +99,6 @@ telegramBot.on('message', function (msg) {
 				if (acessPermission.includes(msg.from.id)){
 				switch (type) {
 					case 'text':
-						console.log(JSON.stringify(res.result.output.generic[0].response_type));
 						telegramBot.sendMessage(chatId, res.result.output.generic[0].text);
 						break;
 	
@@ -108,7 +110,6 @@ telegramBot.on('message', function (msg) {
 								callback_data: elem.label
 							}]
 						})
-						console.log(optionLabel)
 						const jOptions =   {
 							reply_markup: {
 								keyboard: 
@@ -116,13 +117,15 @@ telegramBot.on('message', function (msg) {
 								
 							}
 						}
-							console.log(JSON.stringify(res.result.output.generic[0].response_type));
 							telegramBot.sendMessage(chatId, res.result.output.generic[0].title, jOptions);
 							break;
 					case 'image':
 
 					telegramBot.sendMessage(chatId, res.result.output.generic[0].title);
-					telegramBot.sendPhoto(chatId, res.result.output.generic[0].source)
+					setTimeout(function(){ 
+						telegramBot.sendPhoto(chatId, res.result.output.generic[0].source);
+					}, 70);
+
 					break;
 	
 					default:
