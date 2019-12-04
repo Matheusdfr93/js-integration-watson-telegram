@@ -1,7 +1,7 @@
 const express = require('express');
 const cfenv = require('cfenv');
 const apiKeys = require('./app.json');
-const Client = require('pg');
+const {Pool, Client} = require('pg');
 
 var watson = require('watson-developer-cloud');
 var tbot = require('node-telegram-bot-api');
@@ -10,6 +10,22 @@ var tbot = require('node-telegram-bot-api');
 var app = express();
 app.use(express.static(__dirname + '/public'));
 var appEnv = cfenv.getAppEnv();
+
+const pguser = new Client({
+	user:'postgres',
+	host:'localhost',
+	database:'postgres',
+	password:'Net@2019',
+	port: '5432'
+});
+
+pguser.connect();
+c = pguser
+.query('SELECT * from segurança;')
+.then(res => console.log(res.rows[1]))
+.catch(e => console.error(e.stack))
+
+console.log('c =',c)
 
 const AssistantV2 = require('ibm-watson/assistant/v2');
 const { IamAuthenticator } = require('ibm-watson/auth');
