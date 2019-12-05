@@ -22,7 +22,7 @@ const pguser = new Client({
 pguser.connect();
 c = pguser
 .query('SELECT * from segurança;')
-.then(res => console.log(res.rows[1]))
+.then(res => console.log(res.rows[0]))
 .catch(e => console.error(e.stack))
 
 console.log('c =',c)
@@ -70,6 +70,10 @@ async function createSession (user){
 	}
 }
 
+async function deleteSession (user){
+	const findUser = userSession.indexOf(item => item.id === user )
+	userSession.pop(findUser)
+}
 
 var context = {};
 var telegramBot = new tbot(apiKeys.apiTelegram, 
@@ -101,8 +105,10 @@ telegramBot.on('callback_query', (callbackQuery) => {
 	})
 	
  });
-
+ 
+ let auxValores = 0;
 telegramBot.on('message', function (msg) {
+	let valores = [];
 	var chatId = msg.chat.id;	
 	console.log("user: ", );
 	const session = createSession(msg.from.id);
@@ -112,6 +118,14 @@ telegramBot.on('message', function (msg) {
 			.then(res => {
 				const type = res.result.output.generic[0].response_type;
 				context = res.result.context;
+				if(msg.text == 'Bebidas'){
+					auxValores = 1;
+				} 
+				console.log('aux: ', auxValores);
+				if(auxValores == 1){
+					valores.push(msg.text);
+					console.log('valores: ',valores);
+				}
 				if (acessPermission.includes(msg.from.id)){
 				switch (type) {
 					case 'text':
@@ -151,9 +165,9 @@ telegramBot.on('message', function (msg) {
 				telegramBot.sendMessage(chatId, 'Não Autorizado');
 				} 
 			})
-		
 			.catch(err => {
-				console.log(err);
+				deleteSession(msg.from.id)
+				telegramBot.sendMessage(chatId, 'Sua sessão expirou, me mande um novo olá, por favor');
 			})
 	})
 	
