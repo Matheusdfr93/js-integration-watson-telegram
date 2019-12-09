@@ -10,11 +10,11 @@ app.use(express.static(__dirname + '/public'));
 var appEnv = cfenv.getAppEnv();
 
 const pguser = new Client({
-	user:'postgres',
-	host:'localhost',
-	database:'postgres',
-	password:'Net@2019',
-	port: '5432'
+	user:apiKeys.postgres.user,
+	host:apiKeys.postgres.host,
+	database:apiKeys.postgres.database,
+	password:apiKeys.postgres.password,
+	port: apiKeys.postgres.port
 });
 
 pguser.connect();
@@ -127,7 +127,9 @@ telegramBot.on('message', function (msg) {
 					}
 					console.log('resultado:',  watsonContext);
 				}
-
+				// if (watsonContext.listaDepartamentos) {
+				// 	type = 'listaDepatamentos'
+				// }
 				if (acessPermission.includes(msg.from.id)){
 				switch (type) {
 					case 'text':
@@ -159,7 +161,24 @@ telegramBot.on('message', function (msg) {
 					}, 70);
 
 					break;
-	
+					// case 'listaDepatamentos':
+					// 		const options = // busca no banco
+					// 		const optionLabel = options.map(function(elem) {
+					// 			return 	[{
+					// 				text: elem.label,
+					// 				callback_data: elem.label
+					// 			}]
+					// 		})
+					// 		const jOptions =   {
+					// 			reply_markup: {
+					// 				keyboard: 
+					// 					optionLabel
+									
+					// 			}
+					// 		}
+					// 			telegramBot.sendMessage(chatId, res.result.output.generic[0].title, jOptions);
+								
+					// 	break;
 					default:
 						break;
 				}
