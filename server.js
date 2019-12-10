@@ -111,7 +111,7 @@ telegramBot.on('message', function (msg) {
 		console.log('retorno: ',ses)
 		sendMessage(msg.text, ses) 
 			.then(res => {
-				const type = res.result.output.generic[0].response_type;
+				let type = res.result.output.generic[0].response_type;
 				const watsonContext = res.result.context.skills['main skill'].user_defined;
 				if(watsonContext) {
 					if(watsonContext.computar === 1) {
@@ -125,11 +125,13 @@ telegramBot.on('message', function (msg) {
 						//.then(res => console.log('Valores Computados'))
 						//.catch(e => console.error(e.stack));
 					}
-					console.log('resultado:',  watsonContext);
+					//console.log('resultado:',  watsonContext);
 				}
-				// if (watsonContext.listaDepartamentos) {
-				// 	type = 'listaDepatamentos'
-				// }
+
+				  if (msg.text == 'Validação de Gôndola' || msg.text =='Validação de Estoque') {
+						type = 'Departamento';
+						console.log(type);
+					}
 				if (acessPermission.includes(msg.from.id)){
 				switch (type) {
 					case 'text':
@@ -161,24 +163,35 @@ telegramBot.on('message', function (msg) {
 					}, 70);
 
 					break;
-					// case 'listaDepatamentos':
-					// 		const options = // busca no banco
-					// 		const optionLabel = options.map(function(elem) {
-					// 			return 	[{
-					// 				text: elem.label,
-					// 				callback_data: elem.label
-					// 			}]
-					// 		})
-					// 		const jOptions =   {
-					// 			reply_markup: {
-					// 				keyboard: 
-					// 					optionLabel
-									
-					// 			}
-					// 		}
-					// 			telegramBot.sendMessage(chatId, res.result.output.generic[0].title, jOptions);
+
+					case 'Departamento':
+						console.log('Estou aqui')
+						// let listaDepartamentos;
+						const query = {
+							text: 'SELECT ds_section from sections',
+							rowMode: 'array',
+						}
+						const listaDepartamentos = pguser.query(query)
+						.then(list => {
+							const optionLabel2 = list.rows.map(elem => {
+							 console.log(elem)
+							 return 	[{
+								 text: elem[0],
+								 callback_data: elem[0]
+							 }]
+						 })
+					 
+						 const jOptions2 =   {
+							 reply_markup: {
+								 keyboard: 
+									 optionLabel2
+								 
+							 }
+						 }
+								telegramBot.sendMessage(chatId, res.result.output.generic[0].title, jOptions2);
+						})
 								
-					// 	break;
+					 	break;
 					default:
 						break;
 				}
