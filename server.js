@@ -2,7 +2,10 @@ const express = require('express');
 const cfenv = require('cfenv');
 const apiKeys = require('./app.json');
 const {Pool, Client} = require('pg');
-var watson = require('watson-developer-cloud');
+
+const AssistantV2 = require('ibm-watson/assistant/v2');
+const { IamAuthenticator } = require('ibm-watson/auth');
+
 var tbot = require('node-telegram-bot-api');
 
 var app = express();
@@ -19,16 +22,11 @@ const pguser = new Client({
 
 pguser.connect();
 c = pguser
-.query('SELECT * from segurança;')
-.then(res => console.log(res.rows[0]))
-.catch(e => console.error(e.stack));
+	.query('SELECT * from segurança;')
+	.then(res => console.log(res.rows[0]))
+	.catch(e => console.error(e.stack));
 
-console.log('c =',c);
-
-const AssistantV2 = require('ibm-watson/assistant/v2');
-const { IamAuthenticator } = require('ibm-watson/auth');
-
-let acessPermission = [804932589, 740600431, 710342198,905858684];
+let acessPermission = [804932589, 740600431, 710342198, 905858684];
 
 const conversation = new AssistantV2({
   version: apiKeys.watsonVersion,
@@ -44,9 +42,8 @@ async function newWatsonSes() {
 	})
 }
 
-let userSession = [];
+const userSession = [];
 async function createSession (user){
-	console.log(user)
 	const findUser = userSession.filter(item => item.id === user )
 	if(findUser[0] === undefined){
 		key = await newWatsonSes().then( async res => {
@@ -101,112 +98,131 @@ function sendMessage(msg, ses) {
 	})
 }
  
-let auxValores = 0;
-let valores = [];
 telegramBot.on('message', function (msg) {
-	var chatId = msg.chat.id;	
-	console.log("user: ", );
-	const session = createSession(msg.from.id);
-	session.then(ses => {
-		console.log('retorno: ',ses)
-		sendMessage(msg.text, ses) 
-			.then(res => {
-				let type = res.result.output.generic[0].response_type;
-				const watsonContext = res.result.context.skills['main skill'].user_defined;
-				if(watsonContext) {
-					if(watsonContext.computar === 1) {
-						console.log(watsonContext.computar)
-						const query = {
-							text: 'INSERT INTO validacao (tipoValidacao, departamento, sku, temproduto, motivo_nao_venda, conseguiu_ajustar, solicitarAbastecimento) values ($1, $2, $3, $4, $5, $6, $7);	',
-							values: [watsonContext.tipoValidacao, watsonContext.departamento, watsonContext.sku, watsonContext.temproduto, watsonContext.motivonaovenda, watsonContext.conseguiuAjustar, watsonContext.solicitarAbastecimento],
+	const chatId = msg.chat.id;	
+	const session = createSession(msg.from.id)
+	session
+		.then(ses => {
+			sendMessage(msg.text, ses) 
+				.then(res => {
+					let type = res.result.output.generic[0].response_type;
+					const watsonContext = res.result.context.skills['main skill'].user_defined;
+					if(watsonContext) {
+						if(watsonContext.computar === 1) {
+							const query = {
+								text: 'INSERT INTO validacao (tipoValidacao, departamento, sku, temproduto, motivo_nao_venda, conseguiu_ajustar, solicitarAbastecimento) values ($1, $2, $3, $4, $5, $6, $7);	',
+								values: [watsonContext.tipoValidacao, watsonContext.departamento, watsonContext.sku, watsonContext.temproduto, watsonContext.motivonaovenda, watsonContext.conseguiuAjustar, watsonContext.solicitarAbastecimento],
+							}
+							c = pguser
+								.query(query)
 						}
-						c = pguser
-						.query(query)
-						//.then(res => console.log('Valores Computados'))
-						//.catch(e => console.error(e.stack));
 					}
-					//console.log('resultado:',  watsonContext);
-				}
-
-				  if (msg.text == 'Validação de Gôndola' || msg.text =='Validação de Estoque') {
+		
+					if (msg.text == 'Validação de Gôndola' || msg.text =='Validação de Estoque') {
 						type = 'Departamento';
 						console.log(type);
 					}
-				if (acessPermission.includes(msg.from.id)){
-				switch (type) {
-					case 'text':
-						telegramBot.sendMessage(chatId, res.result.output.generic[0].text);
-						break;
-	
-					case 'option':
-						const options = res.result.output.generic[0].options;
-						const optionLabel = options.map(function(elem) {
-							return 	[{
-								text: elem.label,
-								callback_data: elem.label
-							}]
-						})
-						const jOptions =   {
-							reply_markup: {
-								keyboard: 
-									optionLabel
-								
-							}
-						}
-							telegramBot.sendMessage(chatId, res.result.output.generic[0].title, jOptions);
+
+					if(msg.text === watsonContext.departamento){
+						type = 'sku';
+					}
+
+					if (acessPermission.includes(msg.from.id)){
+					switch (type) {
+						case 'text':
+							telegramBot.sendMessage(chatId, res.result.output.generic[0].text);
 							break;
-					case 'image':
-
-					telegramBot.sendMessage(chatId, res.result.output.generic[0].title);
-					setTimeout(function(){ 
-						telegramBot.sendPhoto(chatId, res.result.output.generic[0].source);
-					}, 70);
-
-					break;
-
-					case 'Departamento':
-						console.log('Estou aqui')
-						// let listaDepartamentos;
-						const query = {
+		
+						case 'option':
+							const options = res.result.output.generic[0].options;
+							const optionLabel = options.map(function(elem) {
+								return 	[{
+									text: elem.label,
+									callback_data: elem.label
+								}]
+							})
+							const jOptions =   {
+								reply_markup: {
+									keyboard: 
+										optionLabel
+									
+								}
+							}
+								telegramBot.sendMessage(chatId, res.result.output.generic[0].title, jOptions);
+								break;
+						case 'image':
+		
+						telegramBot.sendMessage(chatId, res.result.output.generic[0].title);
+						setTimeout(function(){ 
+							telegramBot.sendPhoto(chatId, res.result.output.generic[0].source);
+						}, 70);
+		
+						break;
+		
+						case 'Departamento':
+							const query = {
 							text: 'SELECT ds_section from sections',
 							rowMode: 'array',
-						}
-						const listaDepartamentos = pguser.query(query)
-						.then(list => {
+							}
+							
+						pguser.query(query).then(list => {
 							const optionLabel2 = list.rows.map(elem => {
-							 console.log(elem)
-							 return 	[{
-								 text: elem[0],
-								 callback_data: elem[0]
-							 }]
-						 })
-					 
-						 const jOptions2 =   {
-							 reply_markup: {
-								 keyboard: 
-									 optionLabel2
-								 
-							 }
-						 }
-								telegramBot.sendMessage(chatId, res.result.output.generic[0].title, jOptions2);
+								console.log(elem)
+								return 	[{
+									text: elem[0],
+									callback_data: elem[0]
+								}]
+							})
+							const jOptions2 =   {
+								reply_markup: {
+									keyboard: 
+										optionLabel2
+									
+								}
+							}
+							telegramBot.sendMessage(chatId, res.result.output.generic[0].title, jOptions2);
 						})
-								
-					 	break;
-					default:
-						break;
-				}
-				}else{
-				telegramBot.sendMessage(chatId, 'Não Autorizado');
-				} 
-			})
-			.catch(err => {
-				console.log(err)
-				deleteSession(msg.from.id)
-				telegramBot.sendMessage(chatId, 'Sua sessão expirou, me mande um novo olá, por favor');
-			})
-	})
-	
+									
+							break;
+							case 'sku':
+									const querysku = {
+										text: `SELECT ds_sku from skus where ds_departamento = '${msg.text}' and validado = false;`,
+										rowMode: 'array',
+										}
+										pguser.query(querysku).then(list => {
+											const optionLabel3 = list.rows.map(elem => {
+												console.log(elem)
+												return 	[{
+													text: elem[0],
+													callback_data: elem[0]
+												}]
+											})
+											const jOptions3 =   {
+												reply_markup: {
+													keyboard: 
+														optionLabel3
+													
+												}
+											}
+											telegramBot.sendMessage(chatId, res.result.output.generic[0].title, jOptions3);
+										})
 
+
+
+								break;
+						default:
+							break;
+					}
+					}  else {
+					telegramBot.sendMessage(chatId, 'Não Autorizado');
+					} 
+				})
+				.catch(err => {
+					console.log(err)
+					deleteSession(msg.from.id)
+					telegramBot.sendMessage(chatId, 'Sua sessão expirou, me mande um novo olá, por favor');
+				})
+		})
 });
 
 
