@@ -115,6 +115,9 @@ console.log(timeConverter(0));
  
 telegramBot.on('message', function (msg) {
 	const chatId = msg.chat.id;	
+
+	datainicio = timeConverter(msg.date)
+	console.log('tempooo: ', datainicio)
 	const session = createSession(msg.from.id)
 	session
 		.then(ses => {
@@ -139,8 +142,6 @@ telegramBot.on('message', function (msg) {
 					}
 					if(msg.text === watsonContext.departamento || msg.text === 'Nova Validação no mesmo departamento'){
 					type = 'sku';
-					datainicio = timeConverter(msg.date)
-					console.log('tempooo: ', datainicio)
 					}
 
 					if (acessPermission.includes(msg.from.id)){
