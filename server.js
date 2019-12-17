@@ -97,6 +97,21 @@ function sendMessage(msg, ses) {
     }
 	})
 }
+
+function timeConverter(UNIX_timestamp){
+  var a = new Date(UNIX_timestamp * 1000);
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var year = a.getFullYear();
+  var month = months[a.getMonth()];
+  var date = a.getDate();
+  var hour = a.getHours();
+  var min = a.getMinutes();
+  var sec = a.getSeconds();
+  var time = date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec ;
+  return time;
+}
+
+console.log(timeConverter(0));
  
 telegramBot.on('message', function (msg) {
 	const chatId = msg.chat.id;	
@@ -108,6 +123,7 @@ telegramBot.on('message', function (msg) {
 					let type = res.result.output.generic[0].response_type;
 					const watsonContext = res.result.context.skills['main skill'].user_defined;
 					if(watsonContext) {
+						console.log(watsonContext)
 						if(watsonContext.computar === 1) {
 							const query = {
 								text: 'INSERT INTO validacao (tipoValidacao, departamento, sku, temproduto, motivo_nao_venda, conseguiu_ajustar, solicitarAbastecimento) values ($1, $2, $3, $4, $5, $6, $7);	',
@@ -118,13 +134,13 @@ telegramBot.on('message', function (msg) {
 						}
 					}
 		
-					if (msg.text == 'Validação de Gôndola' || msg.text =='Validação de Estoque') {
+					if (msg.text == 'Validação de Gôndola' || msg.text =='Validação de Estoque' || msg.text == 'Nova Validação em outro departamento') {
 						type = 'Departamento';
-						console.log(type);
 					}
-
-					if(msg.text === watsonContext.departamento){
-						type = 'sku';
+					if(msg.text === watsonContext.departamento || msg.text === 'Nova Validação no mesmo departamento'){
+					type = 'sku';
+					datainicio = timeConverter(msg.date)
+					console.log('tempooo: ', datainicio)
 					}
 
 					if (acessPermission.includes(msg.from.id)){
@@ -167,7 +183,6 @@ telegramBot.on('message', function (msg) {
 							
 						pguser.query(query).then(list => {
 							const optionLabel2 = list.rows.map(elem => {
-								console.log(elem)
 								return 	[{
 									text: elem[0],
 									callback_data: elem[0]
@@ -186,17 +201,19 @@ telegramBot.on('message', function (msg) {
 							break;
 							case 'sku':
 									const querysku = {
-										text: `SELECT ds_sku from skus where ds_departamento = '${msg.text}' and validado = false;`,
+										text: `SELECT ds_sku, tipo_problema from skus where ds_departamento = '${watsonContext.departamento}' and validado = false;`,
 										rowMode: 'array',
 										}
 										pguser.query(querysku).then(list => {
 											const optionLabel3 = list.rows.map(elem => {
-												console.log(elem)
+												//console.log(elem)
 												return 	[{
-													text: elem[0],
-													callback_data: elem[0]
+													text: elem[0] + ' ' + elem[1],
+													callback_data: elem[0] + ' ' + elem [1]
 												}]
 											})
+
+
 											const jOptions3 =   {
 												reply_markup: {
 													keyboard: 

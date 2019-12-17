@@ -3,7 +3,7 @@
     "watsonVersion":"2019-10-09",
     "watsonUsername":"matheusdfr93@gmail.com",
     "apiTelegram":"1061971905:AAFADFIDo1AYfdHAIZMsaPqdQMu2hLXMBo0",
-    "assistantId":"3ae56d03-84ad-46db-a073-d0a56a932d04",
+    "assistantId":"422166ea-c502-4b2a-bbc9-4c5c081b1146",
     "postgres":{
         "user":"postgres",
         "host":"localhost",
