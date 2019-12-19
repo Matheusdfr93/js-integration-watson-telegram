@@ -128,12 +128,17 @@ telegramBot.on('message', function (msg) {
 					if(watsonContext) {
 						console.log(watsonContext)
 						if(watsonContext.computar === 1) {
+							// const query = {
+							// 	text: 'INSERT INTO validacao (tipoValidacao, departamento, sku, temproduto, motivo_nao_venda, conseguiu_ajustar, solicitarAbastecimento) values ($1, $2, $3, $4, $5, $6, $7);	',
+							// 	values: [watsonContext.tipoValidacao, watsonContext.departamento, watsonContext.sku, watsonContext.temproduto, watsonContext.motivonaovenda, watsonContext.conseguiuAjustar, watsonContext.solicitarAbastecimento],
+							// }
 							const query = {
-								text: 'INSERT INTO validacao (tipoValidacao, departamento, sku, temproduto, motivo_nao_venda, conseguiu_ajustar, solicitarAbastecimento) values ($1, $2, $3, $4, $5, $6, $7);	',
-								values: [watsonContext.tipoValidacao, watsonContext.departamento, watsonContext.sku, watsonContext.temproduto, watsonContext.motivonaovenda, watsonContext.conseguiuAjustar, watsonContext.solicitarAbastecimento],
+								text: 'INSERT INTO execucao (cod_assunto, cod_cpf, cod_loja, cod_sku, cod_depto, tipo_validacao, tipo_problema, tem_produto_estoque, tem_produto_gondola, conseguiu_ajustar, motivo_nao_venda, qtde_estoque, qtde_gondola, tempo_inicio, tempo_fim, data_execucao) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16);',
+								values: [null, null, null, watsonContext.sku, watsonContext.departamento, watsonContext.tipoValidacao, watsonContext.tipoProblema, watsonContext.temProdutoEstoque, watsonContext.temprodutoGondola, watsonContext.conseguiuAjustar, watsonContext.motivonaovenda, watsonContext.qtdEstoque, watsonContext.qtdGondola, null, null, null]
 							}
 							c = pguser
 								.query(query)
+								
 						}
 					}
 		
