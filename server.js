@@ -7,6 +7,7 @@ const horariofim = require('./funcoes/horario');
 const datahoje = require('./funcoes/data');
 const AssistantV2 = require('ibm-watson/assistant/v2');
 const { IamAuthenticator } = require('ibm-watson/auth');
+const {createSession, deleteSession, sendMessage} = require('./funcoes/Watson')
 
 var tbot = require('node-telegram-bot-api');
 
@@ -21,8 +22,6 @@ const sequelize = new Sequelize('postgres', 'postgres', apiKeys.postgres.passwor
 var app = express();
 app.use(express.static(__dirname + '/public'));
 var appEnv = cfenv.getAppEnv();
-
-
 
 const pguser = new Client({
 	user:apiKeys.postgres.user,
@@ -40,84 +39,13 @@ c = pguser
 
 let acessPermission = [804932589, 740600431, 710342198, 905858684, 1013468107];
 
-const conversation = new AssistantV2({
-  version: apiKeys.watsonVersion,
-  authenticator: new IamAuthenticator({
-    apikey: apiKeys.apikey,
-  }),
-  url: 'https://gateway.watsonplatform.net/assistant/api',
-});
-
-async function newWatsonSes() {
-	return await conversation.createSession({
-		assistantId: apiKeys.assistantId
-	})
-}
-
-const userSession = [];
-async function createSession (user){
-	const findUser = userSession.filter(item => item.id === user )
-	if(findUser[0] === undefined){
-		key = await newWatsonSes().then( async res => {
-			const session_id = await res.result.session_id
-			const newUser = {
-				id: user,
-				session: session_id
-			}
-			userSession.push(newUser)
-			return newUser.session;
-		})
-		console.log('ses: ',key);
-		return key;
-	} else {
-		return findUser[0].session;
-	}
-}
-
-async function deleteSession (user){
-	const findUser = userSession.indexOf(item => item.id === user )
-	userSession.pop(findUser)
-}
-
 const userContext = {};
 const telegramBot = new tbot(apiKeys.apiTelegram, 
  { polling: true });
 
-function sendMessage(msg, ses) {
-	console.log(msg)
-	return conversation.message({
-		assistantId: apiKeys.assistantId,
-		sessionId: ses,
-		input: {
-		  'message_type': 'text',
-		  'text': msg,
-			options: {
-				return_context: true
-			},
-		},
-		context: {
-      global: {
-        system: {
-          user_id: ses
-        }
-      },
-      skills: {
-        'main skill': {
-          user_defined: {}
-        }
-      }
-    }
-	})
-}
 
-
-//console.log(timeConverter(0));
- 
 telegramBot.on('message', function (msg) {
 	const chatId = msg.chat.id;	
-	
-	//datainicio = horariofim(msg.date)
-	//console.log('tempo: ', datainicio, 'id', msg.from.id);
 	const session = createSession(msg.from.id)
 	session
 		.then(ses => {
@@ -252,8 +180,6 @@ telegramBot.on('message', function (msg) {
 				})
 		})
 });
-
-
 
 app.listen(3000, 'localhost', function() {
   console.log("server starting on " + appEnv.url);
