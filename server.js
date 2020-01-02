@@ -2,15 +2,27 @@ const express = require('express');
 const cfenv = require('cfenv');
 const apiKeys = require('./app.json');
 const {Pool, Client} = require('pg');
-
+const Sequelize = require('sequelize');
+const horariofim = require('./funcoes/horario');
+const datahoje = require('./funcoes/data');
 const AssistantV2 = require('ibm-watson/assistant/v2');
 const { IamAuthenticator } = require('ibm-watson/auth');
 
 var tbot = require('node-telegram-bot-api');
 
+const sequelize = new Sequelize('postgres', 'postgres', apiKeys.postgres.password, {
+  host: apiKeys.postgres.host,
+  dialect: 'postgres'/* one of 'mysql' | 'mariadb' | 'postgres' | 'mssql' */
+});
+
+//const model = sequ.model;
+//model.findall({})
+
 var app = express();
 app.use(express.static(__dirname + '/public'));
 var appEnv = cfenv.getAppEnv();
+
+
 
 const pguser = new Client({
 	user:apiKeys.postgres.user,
@@ -26,7 +38,7 @@ c = pguser
 	.then(res => console.log(res.rows[0]))
 	.catch(e => console.error(e.stack));
 
-let acessPermission = [804932589, 740600431, 710342198, 905858684];
+let acessPermission = [804932589, 740600431, 710342198, 905858684, 1013468107];
 
 const conversation = new AssistantV2({
   version: apiKeys.watsonVersion,
@@ -98,46 +110,38 @@ function sendMessage(msg, ses) {
 	})
 }
 
-function timeConverter(UNIX_timestamp){
-  var a = new Date(UNIX_timestamp * 1000);
-  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  var year = a.getFullYear();
-  var month = months[a.getMonth()];
-  var date = a.getDate();
-  var hour = a.getHours();
-  var min = a.getMinutes();
-  var sec = a.getSeconds();
-  var time = date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec ;
-  return time;
-}
 
-console.log(timeConverter(0));
+//console.log(timeConverter(0));
  
 telegramBot.on('message', function (msg) {
 	const chatId = msg.chat.id;	
-
-	datainicio = timeConverter(msg.date)
-	console.log('tempooo: ', datainicio)
+	
+	//datainicio = horariofim(msg.date)
+	//console.log('tempo: ', datainicio, 'id', msg.from.id);
 	const session = createSession(msg.from.id)
 	session
 		.then(ses => {
 			sendMessage(msg.text, ses) 
 				.then(res => {
+					console.log(msg.from.id)
 					let type = res.result.output.generic[0].response_type;
 					const watsonContext = res.result.context.skills['main skill'].user_defined;
 					if(watsonContext) {
-						console.log(watsonContext)
-						if(watsonContext.computar === 1) {
-							// const query = {
-							// 	text: 'INSERT INTO validacao (tipoValidacao, departamento, sku, temproduto, motivo_nao_venda, conseguiu_ajustar, solicitarAbastecimento) values ($1, $2, $3, $4, $5, $6, $7);	',
-							// 	values: [watsonContext.tipoValidacao, watsonContext.departamento, watsonContext.sku, watsonContext.temproduto, watsonContext.motivonaovenda, watsonContext.conseguiuAjustar, watsonContext.solicitarAbastecimento],
-							// }
+							if(watsonContext.computar === 1) {
+							let data = datahoje(msg.date);
+							let tempofim = horariofim(msg.date);
+							var usuario;
+							pguser.query(`SELECT cod_cpf from usuario_security WHERE id_telegram = '${msg.from.id}'`)
+							.then(res => {return res.rows[0].cod_cpf})
+							.catch(e => console.error(e.stack));
+							console.log('usuario:', usuario);
 							const query = {
 								text: 'INSERT INTO execucao (cod_assunto, cod_cpf, cod_loja, cod_sku, cod_depto, tipo_validacao, tipo_problema, tem_produto_estoque, tem_produto_gondola, conseguiu_ajustar, motivo_nao_venda, qtde_estoque, qtde_gondola, tempo_inicio, tempo_fim, data_execucao) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16);',
-								values: [null, null, null, watsonContext.sku, watsonContext.departamento, watsonContext.tipoValidacao, watsonContext.tipoProblema, watsonContext.temProdutoEstoque, watsonContext.temprodutoGondola, watsonContext.conseguiuAjustar, watsonContext.motivonaovenda, watsonContext.qtdEstoque, watsonContext.qtdGondola, null, null, null]
+								values: [usuario, null, null, watsonContext.sku, watsonContext.departamento, watsonContext.tipoValidacao, watsonContext.tipoProblema, watsonContext.temProdutoEstoque, watsonContext.temprodutoGondola, watsonContext.conseguiuAjustar, watsonContext.motivonaovenda, watsonContext.qtdEstoque, watsonContext.qtdGondola, null, tempofim, data]
 							}
 							c = pguser
 								.query(query)
+
 								
 						}
 					}
@@ -151,9 +155,10 @@ telegramBot.on('message', function (msg) {
 
 					if (acessPermission.includes(msg.from.id)){
 					switch (type) {
+
 						case 'text':
 							telegramBot.sendMessage(chatId, res.result.output.generic[0].text);
-							break;
+						break;
 		
 						case 'option':
 							const options = res.result.output.generic[0].options;
