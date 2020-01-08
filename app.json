@@ -8,6 +8,7 @@
         "user":"postgres",
         "host":"localhost",
         "database":"postgres",
+        "schema": "public",
         "password":"Net@2019",
         "port": "5432"
     }

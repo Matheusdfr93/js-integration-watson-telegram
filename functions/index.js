@@ -1,5 +1,5 @@
-const express = require('express');
-const cfenv = require('cfenv');
+const functions = require('firebase-functions');
+
 const apiKeys = require('./app.json');
 const { Client } = require('pg');
 const Sequelize = require('sequelize');
@@ -33,8 +33,7 @@ c = pguser
 
 let acessPermission = [804932589, 740600431, 710342198, 905858684, 1013468107];
 const userContext = {};
-const telegramBot = new tbot(apiKeys.apiTelegram, 
- { polling: true });
+const telegramBot = new tbot(apiKeys.apiTelegram, { polling: true });
 
 
 telegramBot.on('message', function (msg) {
@@ -155,9 +154,6 @@ telegramBot.on('message', function (msg) {
 											}
 											telegramBot.sendMessage(chatId, res.result.output.generic[0].title, jOptions3);
 										})
-
-
-
 								break;
 						default:
 							break;
@@ -173,3 +169,5 @@ telegramBot.on('message', function (msg) {
 				})
 		})
 });
+
+exports.telegramBot = functions.https.onRequest(telegramBot);

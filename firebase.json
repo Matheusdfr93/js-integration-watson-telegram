@@ -1,0 +1,9 @@
+{
+  "hosting": {
+    "public": "functions/public",
+    "rewrites": [ {
+      "source": "**",
+      "function": "telegramBot"
+    } ]
+  }
+}
